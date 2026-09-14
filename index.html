@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NSDA Digital Marketing for Freelancing — MCQ Practice</title>
+
+<!-- Tailwind (CDN, no build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- PapaParse for CSV parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<!-- Fonts: Lora for headings, Inter for English UI, Noto Sans Bengali for Bengali text -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#12211F',
+          teal: {
+            50:  '#EAF2F1',
+            100: '#D3E5E3',
+            300: '#7FAEA9',
+            600: '#1B5A57',
+            700: '#134341',
+            900: '#0F3D3E'
+          },
+          amber: {
+            100: '#F6E7CE',
+            400: '#D8A24F',
+            600: '#C9852A',
+            700: '#A56A1E'
+          },
+          brick: {
+            50:  '#FBEAE5',
+            500: '#B3432B',
+            600: '#95341F'
+          },
+          moss: {
+            50:  '#E9F3EC',
+            500: '#1F7A4D',
+            600: '#186339'
+          },
+          paper: '#F7F7F4'
+        },
+        fontFamily: {
+          serif: ['Lora', 'ui-serif', 'Georgia', 'serif'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          bn: ['"Noto Sans Bengali"', 'Inter', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  /* Keyboard focus visibility (kept explicit — Tailwind's default outline is easy to lose under custom borders) */
+  .opt-btn:focus-visible,
+  .translate-toggle:focus-visible,
+  .primary-btn:focus-visible,
+  .secondary-btn:focus-visible {
+    outline: 3px solid #C9852A;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  .bn { font-family: 'Noto Sans Bengali', 'Inter', sans-serif; }
+
+  /* Simple reveal for Bengali blocks — height-based, respects reduced motion above */
+  .reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 220ms ease;
+  }
+  .reveal.open { grid-template-rows: 1fr; }
+  .reveal > div { overflow: hidden; }
+</style>
+</head>
+
+<body class="bg-paper text-ink font-sans antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <header class="border-b border-teal-900/10 bg-teal-900 text-paper">
+    <div class="max-w-2xl mx-auto px-5 py-6">
+      <p class="text-amber-400 text-sm font-semibold tracking-wide bn">এনএসডিএ প্র্যাকটিস টেস্ট</p>
+      <h1 class="font-serif text-2xl sm:text-3xl font-semibold mt-1 leading-snug">
+        Digital Marketing for Freelancing — MCQ Practice
+      </h1>
+      <p class="text-teal-100 text-sm mt-2 max-w-prose">
+        Answer all questions, then check your results. Tap any question in English to see its Bengali translation.
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-5 pb-32 pt-6">
+
+    <!-- ============ LOADING STATE ============ -->
+    <div id="loadingState" class="py-16 text-center text-teal-700">
+      <div class="inline-block h-8 w-8 border-2 border-teal-300 border-t-teal-700 rounded-full animate-spin" role="status" aria-label="Loading questions"></div>
+      <p class="mt-4 text-sm">Loading questions from the question bank…</p>
+    </div>
+
+    <!-- ============ ERROR STATE ============ -->
+    <div id="errorState" class="hidden py-10">
+      <div class="border-l-4 border-brick-500 bg-brick-50 px-5 py-4 rounded-r-md">
+        <p class="font-semibold text-brick-600">Couldn't load the questions.</p>
+        <p class="text-sm mt-1 text-ink/80">
+          Check that <code class="bg-white/60 px-1 rounded">CSV_URL</code> in the code points to your published
+          Google Sheet CSV link, and that the sheet is published to the web.
+        </p>
+        <p id="errorDetail" class="text-xs mt-2 text-brick-600/80 font-mono"></p>
+      </div>
+    </div>
+
+    <!-- ============ SCORE BANNER (shown after submit) ============ -->
+    <div id="scoreBanner" class="hidden sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 bg-paper/95 backdrop-blur border-b border-teal-900/10" aria-live="polite"></div>
+
+    <!-- ============ QUIZ LIST ============ -->
+    <div id="quizList" class="space-y-5"></div>
+
+    <!-- ============ RETRY BUTTON (shown after submit) ============ -->
+    <div id="retryWrap" class="hidden mt-8 text-center">
+      <button id="retryBtn" class="secondary-btn inline-flex items-center gap-2 border border-teal-700 text-teal-700 hover:bg-teal-50 font-medium px-5 py-2.5 rounded-md transition-colors">
+        Try 10 new questions
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ============ STICKY SUBMIT BAR ============ -->
+  <div id="submitBar" class="hidden fixed bottom-0 inset-x-0 bg-white border-t border-teal-900/10 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <div class="max-w-2xl mx-auto px-5 py-3 flex items-center justify-between gap-4">
+      <p id="progressText" class="text-sm text-ink/70">0 of 10 answered</p>
+      <button id="submitBtn" class="primary-btn bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+        Check results
+      </button>
+    </div>
+  </div>
+
+<script>
+/* =====================================================================
+   CONFIGURATION — edit these two lines for your own sheet / quiz size
+   ===================================================================== */
+const CSV_URL = "PASTE_YOUR_PUBLISHED_GOOGLE_SHEET_CSV_LINK_HERE";
+const QUESTIONS_PER_QUIZ = 10;
+const RANDOMIZE_QUESTIONS = true; // false = always take the first N rows, in sheet order
+
+/* =====================================================================
+   Expected Google Sheet columns (exact header names, row 1):
+   id | questionEn | questionBn | option1En | option2En | option3En | option4En
+      | option1Bn  | option2Bn  | option3Bn | option4Bn | correctOptionIndex
+   correctOptionIndex is 1, 2, 3, or 4.
+   ===================================================================== */
+
+let allQuestions = [];
+let quiz = [];          // the active batch of QUESTIONS_PER_QUIZ questions
+let answers = {};        // questionId -> selected option index (1-4)
+let submitted = false;
+
+const els = {
+  loading: document.getElementById('loadingState'),
+  error: document.getElementById('errorState'),
+  errorDetail: document.getElementById('errorDetail'),
+  scoreBanner: document.getElementById('scoreBanner'),
+  quizList: document.getElementById('quizList'),
+  submitBar: document.getElementById('submitBar'),
+  submitBtn: document.getElementById('submitBtn'),
+  progressText: document.getElementById('progressText'),
+  retryWrap: document.getElementById('retryWrap'),
+  retryBtn: document.getElementById('retryBtn'),
+};
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function loadQuestions() {
+  Papa.parse(CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      const rows = results.data
+        .map((r, i) => ({
+          id: (r.id && String(r.id).trim()) || `row-${i}`,
+          questionEn: (r.questionEn || '').trim(),
+          questionBn: (r.questionBn || '').trim(),
+          optionsEn: [r.option1En, r.option2En, r.option3En, r.option4En].map(v => (v || '').trim()),
+          optionsBn: [r.option1Bn, r.option2Bn, r.option3Bn, r.option4Bn].map(v => (v || '').trim()),
+          correct: parseInt(r.correctOptionIndex, 10)
+        }))
+        .filter(q => q.questionEn && q.optionsEn.every(o => o) && [1,2,3,4].includes(q.correct));
+
+      if (rows.length === 0) {
+        showError('The sheet loaded, but no valid question rows were found. Check your column headers match exactly.');
+        return;
+      }
+
+      allQuestions = rows;
+      startNewQuiz();
+      els.loading.classList.add('hidden');
+    },
+    error: (err) => {
+      showError(err.message || 'Unknown error while fetching the CSV.');
+    }
+  });
+}
+
+function showError(detail) {
+  els.loading.classList.add('hidden');
+  els.error.classList.remove('hidden');
+  els.errorDetail.textContent = detail;
+}
+
+function startNewQuiz() {
+  submitted = false;
+  answers = {};
+  const pool = RANDOMIZE_QUESTIONS ? shuffle(allQuestions) : allQuestions;
+  quiz = pool.slice(0, Math.min(QUESTIONS_PER_QUIZ, pool.length));
+
+  els.scoreBanner.classList.add('hidden');
+  els.scoreBanner.innerHTML = '';
+  els.retryWrap.classList.add('hidden');
+  els.submitBar.classList.remove('hidden');
+
+  renderQuiz();
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function renderQuiz() {
+  els.quizList.innerHTML = quiz.map((q, qIndex) => questionTemplate(q, qIndex)).join('');
+}
+
+function questionTemplate(q, qIndex) {
+  const optionsHtml = q.optionsEn.map((optEn, i) => {
+    const optionNumber = i + 1;
+    const optionBn = q.optionsBn[i];
+    return `
+      <button type="button"
+        class="opt-btn w-full text-left border border-teal-900/15 rounded-md px-4 py-3 flex items-start gap-3 hover:border-teal-600 transition-colors"
+        data-qid="${q.id}" data-option="${optionNumber}"
+        aria-pressed="false">
+        <span class="opt-marker mt-0.5 h-5 w-5 flex-none rounded-full border border-teal-900/25 flex items-center justify-center text-[11px] font-semibold text-teal-700">${optionNumber}</span>
+        <span class="flex-1">
+          <span class="opt-text-en block">${escapeHtml(optEn)}</span>
+          ${optionBn ? `<span class="opt-text-bn hidden bn text-sm text-ink/70 mt-1">${escapeHtml(optionBn)}</span>` : ''}
+        </span>
+      </button>`;
+  }).join('');
+
+  return `
+    <article class="bg-white border border-teal-900/10 rounded-lg p-5" data-question-card="${q.id}">
+      <div class="flex items-start gap-3">
+        <span class="font-serif text-teal-700 font-semibold text-lg flex-none">${qIndex + 1}.</span>
+        <div class="flex-1">
+          <button type="button" class="translate-toggle text-left font-medium leading-relaxed hover:text-teal-700" data-qid="${q.id}">
+            ${escapeHtml(q.questionEn)}
+            <span class="ml-1 text-teal-600 text-sm align-middle" title="Tap to show Bengali translation">🌐</span>
+          </button>
+          <div class="reveal mt-1" data-bn-wrap="${q.id}">
+            <div>
+              <p class="q-text-bn bn text-sm text-ink/70 pt-1">${escapeHtml(q.questionBn)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-4 space-y-2 pl-8" data-options="${q.id}">
+        ${optionsHtml}
+      </div>
+    </article>`;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// ---- Event delegation ----
+els.quizList.addEventListener('click', (e) => {
+  const toggle = e.target.closest('.translate-toggle');
+  if (toggle) {
+    const wrap = document.querySelector(`[data-bn-wrap="${toggle.dataset.qid}"]`);
+    wrap.classList.toggle('open');
+    return;
+  }
+
+  const opt = e.target.closest('.opt-btn');
+  if (opt && !submitted) {
+    const qid = opt.dataset.qid;
+    const chosen = parseInt(opt.dataset.option, 10);
+    answers[qid] = chosen;
+
+    document.querySelectorAll(`[data-options="${qid}"] .opt-btn`).forEach(btn => {
+      const isChosen = parseInt(btn.dataset.option, 10) === chosen;
+      btn.setAttribute('aria-pressed', String(isChosen));
+      btn.classList.toggle('border-teal-600', isChosen);
+      btn.classList.toggle('bg-teal-50', isChosen);
+      const marker = btn.querySelector('.opt-marker');
+      marker.classList.toggle('bg-teal-700', isChosen);
+      marker.classList.toggle('text-white', isChosen);
+      marker.classList.toggle('border-teal-700', isChosen);
+    });
+
+    updateProgress();
+  }
+});
+
+function updateProgress() {
+  const answeredCount = Object.keys(answers).filter(qid => quiz.some(q => q.id === qid)).length;
+  els.progressText.textContent = `${answeredCount} of ${quiz.length} answered`;
+  els.submitBtn.disabled = answeredCount === 0;
+}
+
+// ---- Submit & review ----
+els.submitBtn.addEventListener('click', () => {
+  submitted = true;
+  let score = 0;
+
+  quiz.forEach(q => {
+    const chosen = answers[q.id];
+    if (chosen === q.correct) score++;
+
+    // Reveal Bengali for question
+    document.querySelector(`[data-bn-wrap="${q.id}"]`).classList.add('open');
+
+    document.querySelectorAll(`[data-options="${q.id}"] .opt-btn`).forEach(btn => {
+      btn.disabled = true;
+      btn.classList.add('cursor-default');
+      const optionNumber = parseInt(btn.dataset.option, 10);
+      const isCorrect = optionNumber === q.correct;
+      const isChosenWrong = optionNumber === chosen && chosen !== q.correct;
+
+      // Reveal Bengali option text
+      const bnSpan = btn.querySelector('.opt-text-bn');
+      if (bnSpan) bnSpan.classList.remove('hidden');
+
+      if (isCorrect) {
+        btn.classList.remove('border-teal-900/15', 'border-teal-600', 'bg-teal-50');
+        btn.classList.add('border-moss-500', 'bg-moss-50');
+        const marker = btn.querySelector('.opt-marker');
+        marker.classList.remove('bg-teal-700', 'border-teal-700');
+        marker.classList.add('bg-moss-500', 'border-moss-500', 'text-white');
+      } else if (isChosenWrong) {
+        btn.classList.remove('border-teal-900/15', 'border-teal-600', 'bg-teal-50');
+        btn.classList.add('border-brick-500', 'bg-brick-50');
+        const marker = btn.querySelector('.opt-marker');
+        marker.classList.remove('bg-teal-700', 'border-teal-700');
+        marker.classList.add('bg-brick-500', 'border-brick-500', 'text-white');
+      }
+    });
+  });
+
+  renderScoreBanner(score, quiz.length);
+  els.submitBar.classList.add('hidden');
+  els.retryWrap.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function renderScoreBanner(score, total) {
+  const pct = Math.round((score / total) * 100);
+  const tone = pct >= 70 ? 'moss' : pct >= 40 ? 'amber' : 'brick';
+  const toneClasses = {
+    moss:  'border-moss-500 bg-moss-50 text-moss-600',
+    amber: 'border-amber-600 bg-amber-100 text-amber-700',
+    brick: 'border-brick-500 bg-brick-50 text-brick-600'
+  };
+  els.scoreBanner.className = `sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 border-l-4 ${toneClasses[tone]} rounded-r-md`;
+  els.scoreBanner.innerHTML = `
+    <p class="font-serif text-xl font-semibold">${score} / ${total} correct (${pct}%)</p>
+    <p class="text-sm mt-1 opacity-80">Correct answers are green, your incorrect picks are red. Bengali translations are shown for every question and option.</p>
+  `;
+  els.scoreBanner.classList.remove('hidden');
+}
+
+els.retryBtn.addEventListener('click', startNewQuiz);
+
+// ---- Kick things off ----
+loadQuestions();
+</script>
+</body>
+</html>
