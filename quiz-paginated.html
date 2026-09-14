@@ -51,13 +51,14 @@
         Digital Marketing for Freelancing — MCQ Practice
       </h1>
       <p class="text-teal-100 text-sm mt-2 max-w-prose">
-        All questions, 10 per page. Answer at your own pace, then check your results anytime.
+        10 questions per page. Check each page's answers on its own — other pages stay untouched.
       </p>
     </div>
   </header>
 
   <main class="max-w-2xl mx-auto px-5 pb-40 pt-6">
-    <div id="scoreBanner" class="hidden sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 bg-paper/95 backdrop-blur border-b border-teal-900/10" aria-live="polite"></div>
+    <p id="overallSummary" class="text-sm text-ink/60 mb-4"></p>
+    <div id="pageScoreBanner" class="hidden px-5 py-4 mb-6 border-l-4 rounded-r-md"></div>
     <div id="quizList" class="space-y-5"></div>
   </main>
 
@@ -74,9 +75,9 @@
         </button>
       </div>
       <div class="flex items-center justify-between gap-3">
-        <p id="progressText" class="text-sm text-ink/70">0 of 77 answered</p>
-        <button id="submitBtn" class="primary-btn bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-          Check results
+        <p id="progressText" class="text-sm text-ink/70">0 of 10 answered on this page</p>
+        <button id="checkPageBtn" class="primary-btn bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          Check this page
         </button>
       </div>
     </div>
@@ -173,23 +174,32 @@ const QUESTIONS = [
 const TOTAL_PAGES = Math.ceil(QUESTIONS.length / PAGE_SIZE);
 
 let currentPage = 0;
-let answers = {};    // globalIndex -> chosen option number (1-4)
-let submitted = false;
+let answers = {}; // globalIndex -> chosen option number (1-4)
+
+// Per-page state: whether that page has been checked, and its score
+const pageState = Array.from({ length: TOTAL_PAGES }, () => ({ submitted: false, score: 0 }));
 
 const els = {
   quizList: document.getElementById('quizList'),
-  scoreBanner: document.getElementById('scoreBanner'),
+  pageScoreBanner: document.getElementById('pageScoreBanner'),
+  overallSummary: document.getElementById('overallSummary'),
   prevBtn: document.getElementById('prevBtn'),
   nextBtn: document.getElementById('nextBtn'),
   pageIndicator: document.getElementById('pageIndicator'),
   progressText: document.getElementById('progressText'),
-  submitBtn: document.getElementById('submitBtn'),
+  checkPageBtn: document.getElementById('checkPageBtn'),
 };
 
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+function pageRange(pageIndex) {
+  const start = pageIndex * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, QUESTIONS.length);
+  return { start, end };
 }
 
 function questionTemplate(q, globalIdx) {
@@ -217,25 +227,27 @@ function questionTemplate(q, globalIdx) {
 }
 
 function renderPage() {
-  const start = currentPage * PAGE_SIZE;
-  const end = Math.min(start + PAGE_SIZE, QUESTIONS.length);
+  const { start, end } = pageRange(currentPage);
   const slice = QUESTIONS.slice(start, end);
+  const thisPageSubmitted = pageState[currentPage].submitted;
 
   els.quizList.innerHTML = slice.map((q, i) => questionTemplate(q, start + i)).join('');
 
-  // Re-apply any previously selected answer / submitted result styling
   for (let idx = start; idx < end; idx++) {
-    applyOptionVisualState(idx);
+    applyOptionVisualState(idx, thisPageSubmitted);
   }
 
   els.pageIndicator.textContent = `Page ${currentPage + 1} of ${TOTAL_PAGES}`;
   els.prevBtn.disabled = currentPage === 0;
   els.nextBtn.disabled = currentPage === TOTAL_PAGES - 1;
 
+  renderPageScoreBanner();
   updateProgress();
+  updateCheckButton();
+  updateOverallSummary();
 }
 
-function applyOptionVisualState(globalIdx) {
+function applyOptionVisualState(globalIdx, thisPageSubmitted) {
   const q = QUESTIONS[globalIdx];
   const chosen = answers[globalIdx];
   const buttons = document.querySelectorAll(`[data-options="${globalIdx}"] .opt-btn`);
@@ -244,10 +256,10 @@ function applyOptionVisualState(globalIdx) {
     const optionNumber = parseInt(btn.dataset.option, 10);
     const marker = btn.querySelector('.opt-marker');
 
-    btn.disabled = submitted;
-    btn.classList.toggle('cursor-default', submitted);
+    btn.disabled = thisPageSubmitted;
+    btn.classList.toggle('cursor-default', thisPageSubmitted);
 
-    if (!submitted) {
+    if (!thisPageSubmitted) {
       const isChosen = optionNumber === chosen;
       btn.setAttribute('aria-pressed', String(isChosen));
       btn.classList.toggle('border-teal-600', isChosen);
@@ -258,7 +270,6 @@ function applyOptionVisualState(globalIdx) {
       return;
     }
 
-    // Submitted: show correct/incorrect coloring
     const isCorrect = optionNumber === q.correct;
     const isChosenWrong = optionNumber === chosen && chosen !== q.correct;
 
@@ -278,21 +289,100 @@ function applyOptionVisualState(globalIdx) {
 }
 
 els.quizList.addEventListener('click', (e) => {
-  if (submitted) return;
+  if (pageState[currentPage].submitted) return;
   const opt = e.target.closest('.opt-btn');
   if (!opt) return;
 
   const globalIdx = parseInt(opt.dataset.qidx, 10);
   const chosen = parseInt(opt.dataset.option, 10);
   answers[globalIdx] = chosen;
-  applyOptionVisualState(globalIdx);
+  applyOptionVisualState(globalIdx, false);
   updateProgress();
+  updateCheckButton();
 });
 
 function updateProgress() {
-  const answeredCount = Object.keys(answers).length;
-  els.progressText.textContent = `${answeredCount} of ${QUESTIONS.length} answered`;
-  els.submitBtn.disabled = answeredCount === 0;
+  const { start, end } = pageRange(currentPage);
+  let answeredOnPage = 0;
+  for (let i = start; i < end; i++) if (answers[i] !== undefined) answeredOnPage++;
+  els.progressText.textContent = `${answeredOnPage} of ${end - start} answered on this page`;
+}
+
+function updateCheckButton() {
+  const { start, end } = pageRange(currentPage);
+  const answeredOnPage = Object.keys(answers).filter(k => k >= start && k < end).length;
+
+  if (pageState[currentPage].submitted) {
+    els.checkPageBtn.textContent = 'Retry this page';
+    els.checkPageBtn.disabled = false;
+    els.checkPageBtn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+    els.checkPageBtn.classList.add('bg-teal-700', 'hover:bg-teal-800');
+  } else {
+    els.checkPageBtn.textContent = 'Check this page';
+    els.checkPageBtn.disabled = answeredOnPage === 0;
+    els.checkPageBtn.classList.remove('bg-teal-700', 'hover:bg-teal-800');
+    els.checkPageBtn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+  }
+}
+
+els.checkPageBtn.addEventListener('click', () => {
+  const { start, end } = pageRange(currentPage);
+
+  if (pageState[currentPage].submitted) {
+    // Retry this page only
+    for (let i = start; i < end; i++) delete answers[i];
+    pageState[currentPage] = { submitted: false, score: 0 };
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  let score = 0;
+  for (let i = start; i < end; i++) {
+    if (answers[i] === QUESTIONS[i].correct) score++;
+  }
+  pageState[currentPage] = { submitted: true, score };
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function renderPageScoreBanner() {
+  const state = pageState[currentPage];
+  if (!state.submitted) {
+    els.pageScoreBanner.classList.add('hidden');
+    els.pageScoreBanner.innerHTML = '';
+    return;
+  }
+  const { start, end } = pageRange(currentPage);
+  const total = end - start;
+  const pct = Math.round((state.score / total) * 100);
+  const tone = pct >= 70 ? 'moss' : pct >= 40 ? 'amber' : 'brick';
+  const toneClasses = {
+    moss:  'border-moss-500 bg-moss-50 text-moss-600',
+    amber: 'border-amber-600 bg-amber-100 text-amber-700',
+    brick: 'border-brick-500 bg-brick-50 text-brick-600'
+  };
+  els.pageScoreBanner.className = `px-5 py-4 mb-6 border-l-4 rounded-r-md ${toneClasses[tone]}`;
+  els.pageScoreBanner.innerHTML = `
+    <p class="font-serif text-lg font-semibold">This page: ${state.score} / ${total} correct (${pct}%)</p>
+    <p class="text-sm mt-1 opacity-80">Correct answers are green, your incorrect picks are red. Other pages are unaffected.</p>
+  `;
+  els.pageScoreBanner.classList.remove('hidden');
+}
+
+function updateOverallSummary() {
+  const checkedPages = pageState.filter(p => p.submitted).length;
+  if (checkedPages === 0) {
+    els.overallSummary.textContent = `${QUESTIONS.length} questions across ${TOTAL_PAGES} pages — check each page whenever you're ready.`;
+    return;
+  }
+  const totalCorrect = pageState.reduce((sum, p) => sum + (p.submitted ? p.score : 0), 0);
+  const totalChecked = pageState.reduce((sum, p, i) => {
+    if (!p.submitted) return sum;
+    const { start, end } = pageRange(i);
+    return sum + (end - start);
+  }, 0);
+  els.overallSummary.textContent = `Checked ${checkedPages} of ${TOTAL_PAGES} pages · Overall so far: ${totalCorrect} / ${totalChecked} correct`;
 }
 
 els.prevBtn.addEventListener('click', () => {
@@ -310,52 +400,6 @@ els.nextBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
 });
-
-els.submitBtn.addEventListener('click', () => {
-  if (submitted) {
-    // acts as "Start Over"
-    submitted = false;
-    answers = {};
-    currentPage = 0;
-    els.scoreBanner.classList.add('hidden');
-    els.submitBtn.textContent = 'Check results';
-    els.submitBtn.classList.remove('bg-teal-700', 'hover:bg-teal-800');
-    els.submitBtn.classList.add('bg-amber-600', 'hover:bg-amber-700');
-    renderPage();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return;
-  }
-
-  submitted = true;
-  let score = 0;
-  QUESTIONS.forEach((q, idx) => {
-    if (answers[idx] === q.correct) score++;
-  });
-
-  renderScoreBanner(score, QUESTIONS.length);
-  renderPage(); // re-render current page with coloring
-  els.submitBtn.textContent = 'Start over';
-  els.submitBtn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
-  els.submitBtn.classList.add('bg-teal-700', 'hover:bg-teal-800');
-  els.submitBtn.disabled = false;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-function renderScoreBanner(score, total) {
-  const pct = Math.round((score / total) * 100);
-  const tone = pct >= 70 ? 'moss' : pct >= 40 ? 'amber' : 'brick';
-  const toneClasses = {
-    moss:  'border-moss-500 bg-moss-50 text-moss-600',
-    amber: 'border-amber-600 bg-amber-100 text-amber-700',
-    brick: 'border-brick-500 bg-brick-50 text-brick-600'
-  };
-  els.scoreBanner.className = `sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 border-l-4 ${toneClasses[tone]} rounded-r-md`;
-  els.scoreBanner.innerHTML = `
-    <p class="font-serif text-xl font-semibold">${score} / ${total} correct (${pct}%)</p>
-    <p class="text-sm mt-1 opacity-80">Correct answers are green, your incorrect picks are red. Browse any page with Previous/Next to review.</p>
-  `;
-  els.scoreBanner.classList.remove('hidden');
-}
 
 renderPage();
 </script>
