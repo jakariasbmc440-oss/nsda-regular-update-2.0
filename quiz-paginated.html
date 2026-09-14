@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NSDA Digital Marketing for Freelancing — MCQ Practice</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#12211F',
+          teal: { 50:'#EAF2F1', 100:'#D3E5E3', 300:'#7FAEA9', 600:'#1B5A57', 700:'#134341', 900:'#0F3D3E' },
+          amber:{ 100:'#F6E7CE', 400:'#D8A24F', 600:'#C9852A', 700:'#A56A1E' },
+          brick:{ 50:'#FBEAE5', 500:'#B3432B', 600:'#95341F' },
+          moss: { 50:'#E9F3EC', 500:'#1F7A4D', 600:'#186339' },
+          paper:'#F7F7F4'
+        },
+        fontFamily: {
+          serif: ['Lora','ui-serif','Georgia','serif'],
+          sans: ['Inter','ui-sans-serif','system-ui','sans-serif'],
+          bn: ['"Noto Sans Bengali"','Inter','sans-serif']
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .opt-btn:focus-visible, .nav-btn:focus-visible, .primary-btn:focus-visible {
+    outline: 3px solid #C9852A; outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  .bn { font-family: 'Noto Sans Bengali', 'Inter', sans-serif; }
+</style>
+</head>
+
+<body class="bg-paper text-ink font-sans antialiased">
+
+  <header class="border-b border-teal-900/10 bg-teal-900 text-paper">
+    <div class="max-w-2xl mx-auto px-5 py-6">
+      <p class="text-amber-400 text-sm font-semibold tracking-wide bn">এনএসডিএ প্র্যাকটিস টেস্ট</p>
+      <h1 class="font-serif text-2xl sm:text-3xl font-semibold mt-1 leading-snug">
+        Digital Marketing for Freelancing — MCQ Practice
+      </h1>
+      <p class="text-teal-100 text-sm mt-2 max-w-prose">
+        All questions, 10 per page. Answer at your own pace, then check your results anytime.
+      </p>
+    </div>
+  </header>
+
+  <main class="max-w-2xl mx-auto px-5 pb-40 pt-6">
+    <div id="scoreBanner" class="hidden sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 bg-paper/95 backdrop-blur border-b border-teal-900/10" aria-live="polite"></div>
+    <div id="quizList" class="space-y-5"></div>
+  </main>
+
+  <!-- ============ STICKY BOTTOM CONTROL BAR ============ -->
+  <div class="fixed bottom-0 inset-x-0 bg-white border-t border-teal-900/10 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <div class="max-w-2xl mx-auto px-5 py-3 space-y-2">
+      <div class="flex items-center justify-between gap-3">
+        <button id="prevBtn" class="nav-btn border border-teal-700 text-teal-700 hover:bg-teal-50 disabled:opacity-30 disabled:cursor-not-allowed font-medium px-4 py-2 rounded-md transition-colors">
+          ← Previous
+        </button>
+        <p id="pageIndicator" class="text-sm font-medium text-ink/70 whitespace-nowrap">Page 1 of 8</p>
+        <button id="nextBtn" class="nav-btn border border-teal-700 text-teal-700 hover:bg-teal-50 disabled:opacity-30 disabled:cursor-not-allowed font-medium px-4 py-2 rounded-md transition-colors">
+          Next →
+        </button>
+      </div>
+      <div class="flex items-center justify-between gap-3">
+        <p id="progressText" class="text-sm text-ink/70">0 of 77 answered</p>
+        <button id="submitBtn" class="primary-btn bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          Check results
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =====================================================================
+   QUESTION BANK — from the NSDA "Digital Marketing for Freelancing,
+   Level 3" written-suggestions PDF. Bengali fields are left out for
+   now since the PDF only had English.
+   ===================================================================== */
+const PAGE_SIZE = 10;
+
+const QUESTIONS = [
+  { q: "How should possible solutions be handled during negotiations?", options: ["They should be avoided","They should be deferred to another meeting","They should be imposed by the leader","They should be discussed and viability assessed"], correct: 4 },
+  { q: "What must an IT professional observe in the workplace, according to established guidelines, to ensure a hazard-free environment?", options: ["Software licensing agreements","Data backup schedules","Network security protocols","Safe workplace practices"], correct: 4 },
+  { q: "Which specific software must a user first select and launch to begin the process of document creation and editing?", options: ["A spreadsheet application","A presentation software","An appropriate word processor","A database management system"], correct: 3 },
+  { q: "How should realistic estimates for time, cost, and delivery be presented?", options: ["During negotiation with clients","Informally via conversation","During workplace meetings only","After project completion"], correct: 1 },
+  { q: "What does unbiased and objective information provided to clients promote?", options: ["Personal gain","Trust and transparency","Confidential issues","Faster negotiation"], correct: 2 },
+  { q: "Which is an example of affiliate marketing?", options: ["Sending internal memos","Printing flyers","Blogging with referral links","Creating company uniforms"], correct: 3 },
+  { q: "Which of the following is a key interpersonal skill for developing rapport in digital negotiation?", options: ["Ignoring the other party","Communication skills","Working in silence","Avoiding eye contact"], correct: 2 },
+  { q: "Compare the different video and visual content formats explained for maximizing reach and engagement on Instagram, including short-form, temporary, and long-form video content.", options: ["Universal Tags, Conversion Tracking and Remarketing","Rich Pins, Product Pins and Events","Stories, Reels and IGTV","Page, Group and Insights"], correct: 3 },
+  { q: "What type of content must a marketer correctly interpret when developing a cohesive media strategy, considering various media formats available?", options: ["Types of Social Media Content","Traditional Print Content","Long-form Academic Essay","Private Email Communications"], correct: 1 },
+  { q: "How can a marketer assess the performance of their content and ads on the platform, by analyzing metrics provided directly by Facebook?", options: ["Facebook insights are interpreted.","Twitter Analytics are reviewed.","External CRM data is cross-referenced.","Sales Navigator reports are generated."], correct: 1 },
+  { q: "Which action is a required step for both Facebook and Twitter Marketing?", options: ["Page and group are created and optimized","Profile is created and optimized","Ad is created and managed","Standard Events, and Custom Conversions are applied"], correct: 3 },
+  { q: "What two structures represent an organization and foster a professional community on LinkedIn?", options: ["Company Page and Group","Page and group","Stories, Reels and IGTV","Pinterest Product Pins and Rich Pins"], correct: 1 },
+  { q: "What specific goal-oriented actions are applied in addition to Standard Events in Facebook Marketing?", options: ["LSI Technique","External Links","Custom Conversions","Header Tag"], correct: 3 },
+  { q: "What action is performed regarding advertising efforts during Twitter practice?", options: ["Ad is created and managed","Blog Posting","Directory Submission","Content Stuffing"], correct: 1 },
+  { q: "What action is performed related to the establishment of the Bio & Profile Image on Instagram?", options: ["Interpreted","Created and optimized","Submitted","Explained"], correct: 2 },
+  { q: "Which interpersonal skill is emphasized for negotiation in the plan?", options: ["Report writing","Data analysis","Listening/reflecting","Public speaking"], correct: 3 },
+  { q: "What is the main purpose of a spreadsheet application in both personal and office environments?", options: ["To create slide shows","To edit digital photographs","To write and format long reports","To organize, calculate, and analyze data in a tabular form"], correct: 4 },
+  { q: "What does unbiased and objective information provided to clients promote?", options: ["Personal gain","Faster negotiation","Confidential issues","Trust and transparency"], correct: 4 },
+  { q: "What must be interpreted first before following workplace behavioral rules?", options: ["National law","Code of conduct","Client expectations","Work standards"], correct: 2 },
+  { q: "Which responsibility reflects fairness in dealing with clients?", options: ["Providing unbiased and objective information","Promoting organizational policies only","Avoiding client questions","Offering free services"], correct: 1 },
+  { q: "What is 'backlink' in SEO?", options: ["Internal link only","A broken link on a website","A link from one website to another","Link to an image"], correct: 3 },
+  { q: "Which is a key digital marketing strategy?", options: ["SEO to improve website ranking","Ignoring customer needs","Deleting old emails","Customer Focus"], correct: 1 },
+  { q: "What is a critical ethical consideration when using Digital Marketing KPI measurement tools?", options: ["Ignoring all data.","Sharing user data publicly without consent.","Respecting user privacy and data protection laws.","Manipulating data to show false success."], correct: 3 },
+  { q: "What is the role of use of Hashtags in social media strategy, as identified in the source's list of key concepts?", options: ["Ad creation only","Profile optimization only","Social media content categorization and discovery","Conversion tracking only"], correct: 3 },
+  { q: "How can a marketer assess the performance of their content and ads on the platform, by analyzing metrics provided directly by Facebook?", options: ["Facebook insights are interpreted.","Twitter Analytics are reviewed.","External CRM data is cross-referenced.","Sales Navigator reports are generated."], correct: 1 },
+  { q: "Identify which type of media content is categorized as non-visual and sound-based, used for engaging audiences via listening.", options: ["Audio","Text","Image","Video"], correct: 1 },
+  { q: "Explain the process that must be performed to establish a strong visual identity on Instagram, specifically focusing on the two main components seen by visitors.", options: ["Bio & Profile Image are created and optimized.","Captions and Hashtags are written.","Ads and Analytics are performed.","Stories and Reels are explained."], correct: 1 },
+  { q: "Which tracking code is used to monitor website visitors from Facebook?", options: ["Pinterest Tag","Universal Tag","Facebook Pixel","LinkedIn Sales Navigator"], correct: 3 },
+  { q: "Which specialized tool is used for managing leads and sales opportunities on LinkedIn?", options: ["Sales Navigator","Facebook Insights","Universal Tag","Hootsuite"], correct: 1 },
+  { q: "Which content format is non-visual and sound-based?", options: ["Audio","Text","Image","Video"], correct: 1 },
+  { q: "What is the first thing you need to understand to start marketing on Twitter?", options: ["Twitter Marketing","LinkedIn Marketing","Facebook for Business","Pinterest Marketing"], correct: 1 },
+  { q: "Which form of media is identified as Social Media Content alongside Text and Image?", options: ["Audio","Slide Content","Hyperlink","URL"], correct: 1 },
+  { q: "What initial marketing concept is interpreted to kick off the Facebook marketing module?", options: ["Facebook insights","Facebook for Business","Facebook Pixel","Facebook Ad Management"], correct: 2 },
+  { q: "What specific element is listed as a general concept related to content sharing and discovery?", options: ["Keywords Density","Use of Hashtags","Back links","Meta Tag Optimization"], correct: 2 },
+  { q: "How can a friendly reception be demonstrated in a non-verbal environment?", options: ["By avoiding small talk","By starting immediately","By offering refreshments","By setting strict rules"], correct: 3 },
+  { q: "Which specific type of function in spreadsheet software is used to perform a logical test and return one value if true and another if false, such as the IF function?", options: ["Mathematical functions","Math and logical functions","Lookup functions","Text functions"], correct: 2 },
+  { q: "What are the small graphical symbols on a desktop interface that represent applications, files, or folders called?", options: ["Taskbars","Icons","Resolutions","Views"], correct: 2 },
+  { q: "What type of information should always remain secure according to policies?", options: ["General data","Marketing details","Public announcements","Confidential information"], correct: 4 },
+  { q: "Which process is applied to ensure consistent quality in product development?", options: ["Random checks","Client interviews","Quality processes","Legal approval"], correct: 3 },
+  { q: "What does unbiased and objective information provided to clients promote?", options: ["Personal gain","Trust and transparency","Confidential issues","Faster negotiation"], correct: 2 },
+  { q: "Which software tool is specifically designed for competitive analysis and keyword research in SEO and SEM?", options: ["Marketo","MailChimp","SEMrush","Google Analytics"], correct: 3 },
+  { q: "When interpreting basic Digital Marketing guidelines, what is a key factor for content success?", options: ["Creating content that is irrelevant to the audience.","Posting at random times without a schedule.","Ensuring content and relevant to the target audience.","Avoiding the use of visuals."], correct: 3 },
+  { q: "Describe the interpretation necessary for measuring campaign success and re-engaging previous visitors using Twitter's specialized tracking tools.", options: ["Instagram Follower to Sales Conversion","Facebook Standard Events","Twitter Conversion Tracking & Remarketing","LinkedIn Profile Optimization"], correct: 3 },
+  { q: "What type of content must a marketer correctly interpret when developing a cohesive media strategy, considering various media formats available?", options: ["Types of Social Media Content","Traditional Print Content","Long-form Academic Essays","Private Email Communications"], correct: 1 },
+  { q: "What key function is described as the overall process of planning, executing, and monitoring social platforms?", options: ["Social media management","Search engine optimization","Email marketing","Public relations"], correct: 1 },
+  { q: "What action is necessary to conduct paid promotional efforts on LinkedIn, targeting specific professional audiences?", options: ["Ad is created and managed.","Profile is optimized.","Company Page is created.","Sales Navigator is interpreted."], correct: 1 },
+  { q: "Which concept, introduced at the beginning of the unit, establishes the inherent value of using online platforms for businesses?", options: ["Customer Lifetime Value (CLV)","Search Engine Marketing (SEM)","Importance of Social Media Marketing","Return on Investment (ROI)"], correct: 3 },
+  { q: "What must be understood to begin professional marketing activities on Facebook?", options: ["Facebook for Business","Facebook Pixel","Facebook Insights","Facebook Messenger"], correct: 1 },
+  { q: "What action is performed related to the creation and analysis of advertising efforts on Instagram?", options: ["Executed","Explained","Performed","Interpreted"], correct: 1 },
+  { q: "What action is executed to maximize the transition of Instagram followers into business leads?", options: ["Executed","Interpreted","Demonstrated","Stated"], correct: 1 },
+  { q: "What specific data element is interpreted to understand Facebook performance?", options: ["Custom Conversions","Facebook insights","Sales Navigator","Pinterest Tag"], correct: 2 },
+  { q: "What type of language should be consistently used throughout the negotiation process?", options: ["Technical language","Persuasive language","Informal language","Appropriate language"], correct: 4 },
+  { q: "How should desktop peripherals be initially configured with a computer system to ensure they are ready for operation?", options: ["They should be installed with the latest drivers.","They should be registered with the operating system.","They should be configured for wireless connectivity.","They should be checked and connected properly."], correct: 4 },
+  { q: "How is workplace professionalism demonstrated effectively?", options: ["By being friendly","By delegating work only","By avoiding strict rules","By presenting skills, knowledge, and qualifications professionally"], correct: 4 },
+  { q: "When interpreting basic Digital Marketing guidelines, what is a key factor for content success?", options: ["Ensuring content and relevant to the target audience.","Posting at random times without a schedule.","Creating content that is irrelevant to the audience.","Avoiding the use of visuals."], correct: 1 },
+  { q: "What is a common position/job title that can be identified within the Digital Marketing field?", options: ["Civil Engineer","SEO Specialist","Surgical Nurse","Accountant"], correct: 2 },
+  { q: "What is affiliate marketing?", options: ["Selling your own products only","Promoting others' products for commission","Hiring new employees","Optimizing internal servers"], correct: 2 },
+  { q: "What specific action is necessary to implement and manage paid promotions on Facebook, which involves budget allocation and audience targeting?", options: ["Profile image is changed.","Post is shared organically.","Ad is created and managed.","Group rules are established."], correct: 3 },
+  { q: "Describe the initial step necessary to commence professional promotion activities, focusing on establishing a personalized brand identity.", options: ["Profile is created and optimized.","Ad is created and managed.","Company Page is created.","Sales Navigator is interpreted."], correct: 1 },
+  { q: "What tracking mechanism is interpreted to monitor user actions (like checkouts or sign-ups) that occur after a user interacts with Pinterest content?", options: ["Pinterest Tag and Events","Facebook Pixel and Standard Events","Twitter Conversion Tracking","LinkedIn Sales Navigator"], correct: 1 },
+  { q: "How are strategies executed on Instagram to transform engaged users into quantifiable business results, such as finalizing transactions or acquiring contact details?", options: ["Ways to Convert Instagram Followers to Sales & Leads","Ways to increase organic reach only","Ways to utilize Twitter trends","Ways to optimize LinkedIn profiles"], correct: 1 },
+  { q: "Which content format is non-visual and sound-based?", options: ["Image","Text","Audio","Video"], correct: 3 },
+  { q: "Which advanced pin type pulls dynamic metadata from a website?", options: ["Rich Pins","Product Pins","Simple Pins","Text Pins"], correct: 1 },
+  { q: "What marketing strategy is interpreted specifically for the micro-blogging platform?", options: ["LinkedIn Marketing","Pinterest Marketing","Facebook Marketing","Twitter Marketing"], correct: 4 },
+  { q: "What specific guidance is explained for improving reach and visibility on the Twitter platform?", options: ["Ways of growing Followers","Interpreting Page Authority","Optimizing Title Tag","Analyzing Keywords"], correct: 1 },
+  { q: "What are identified regarding the use of Captions in Instagram Marketing?", options: ["Execution methods","Roles","Density limits","Stuffing techniques"], correct: 2 },
+  { q: "Which aspect is essential for creating a non-verbal environment that promotes positive negotiating?", options: ["Formal seating arrangements","Limited time","Strict agenda","Warm and welcoming room"], correct: 4 },
+  { q: "What is the key action performed on the software installation package or executable to begin the setup process on a computer system?", options: ["The installation is customized.","The correctness is checked.","The installation requirements are identified.","The installation is started."], correct: 4 },
+  { q: "What variety of visual and textual elements are added to the slides of a presentation to build its content according to the planned design?", options: ["Only text and images","Image, Illustrations, text, table, symbols and media","Charts and graphs","Animations and transitions"], correct: 2 },
+  { q: "Which standard should services and products developed by self and others meet?", options: ["Personal preference","Market trend","Client satisfaction only","Workplace standard"], correct: 4 },
+  { q: "What type of information should always remain secure according to policies?", options: ["General data","Confidential information","Public announcements","Marketing details"], correct: 2 },
+  { q: "Which of these is a social media marketing platform?", options: ["Google Analytics","Gamma","Instagram","Bring"], correct: 3 },
+  { q: "Which advanced Pin type must be created to pull metadata from the source website, enriching the Pin with dynamic, real-time information?", options: ["Text Pins","Simple Pins","Rich Pins","Audio Pins"], correct: 3 },
+  { q: "What specific platform tool is interpreted by marketers using LinkedIn to manage leads and potential sales opportunities effectively?", options: ["Sales Navigator","Facebook Insights","Twitter Trends","Pinterest Events"], correct: 1 },
+  { q: "Which tool within Facebook is used to measure the effectiveness of content and campaigns?", options: ["Facebook Insights","Twitter Conversion Tracking","Pinterest Tag and Events","Google Analytics"], correct: 1 },
+  { q: "What action is performed related to promotional activities on LinkedIn?", options: ["Blog Posting is prepared","Social Bookmarking is performed","Keywords Research is performed","Ad is created and managed"], correct: 4 },
+  { q: "What specific guidelines are interpreted regarding the content posted on Twitter?", options: ["How to Interact","What to Tweet","What to Post","What to Pin"], correct: 2 }
+];
+
+const TOTAL_PAGES = Math.ceil(QUESTIONS.length / PAGE_SIZE);
+
+let currentPage = 0;
+let answers = {};    // globalIndex -> chosen option number (1-4)
+let submitted = false;
+
+const els = {
+  quizList: document.getElementById('quizList'),
+  scoreBanner: document.getElementById('scoreBanner'),
+  prevBtn: document.getElementById('prevBtn'),
+  nextBtn: document.getElementById('nextBtn'),
+  pageIndicator: document.getElementById('pageIndicator'),
+  progressText: document.getElementById('progressText'),
+  submitBtn: document.getElementById('submitBtn'),
+};
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function questionTemplate(q, globalIdx) {
+  const optionsHtml = q.options.map((optEn, i) => {
+    const optionNumber = i + 1;
+    return `
+      <button type="button"
+        class="opt-btn w-full text-left border border-teal-900/15 rounded-md px-4 py-3 flex items-start gap-3 hover:border-teal-600 transition-colors"
+        data-qidx="${globalIdx}" data-option="${optionNumber}" aria-pressed="false">
+        <span class="opt-marker mt-0.5 h-5 w-5 flex-none rounded-full border border-teal-900/25 flex items-center justify-center text-[11px] font-semibold text-teal-700">${optionNumber}</span>
+        <span class="flex-1">${escapeHtml(optEn)}</span>
+      </button>`;
+  }).join('');
+
+  return `
+    <article class="bg-white border border-teal-900/10 rounded-lg p-5" data-question-card="${globalIdx}">
+      <div class="flex items-start gap-3">
+        <span class="font-serif text-teal-700 font-semibold text-lg flex-none">${globalIdx + 1}.</span>
+        <p class="flex-1 font-medium leading-relaxed">${escapeHtml(q.q)}</p>
+      </div>
+      <div class="mt-4 space-y-2 pl-8" data-options="${globalIdx}">
+        ${optionsHtml}
+      </div>
+    </article>`;
+}
+
+function renderPage() {
+  const start = currentPage * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, QUESTIONS.length);
+  const slice = QUESTIONS.slice(start, end);
+
+  els.quizList.innerHTML = slice.map((q, i) => questionTemplate(q, start + i)).join('');
+
+  // Re-apply any previously selected answer / submitted result styling
+  for (let idx = start; idx < end; idx++) {
+    applyOptionVisualState(idx);
+  }
+
+  els.pageIndicator.textContent = `Page ${currentPage + 1} of ${TOTAL_PAGES}`;
+  els.prevBtn.disabled = currentPage === 0;
+  els.nextBtn.disabled = currentPage === TOTAL_PAGES - 1;
+
+  updateProgress();
+}
+
+function applyOptionVisualState(globalIdx) {
+  const q = QUESTIONS[globalIdx];
+  const chosen = answers[globalIdx];
+  const buttons = document.querySelectorAll(`[data-options="${globalIdx}"] .opt-btn`);
+
+  buttons.forEach(btn => {
+    const optionNumber = parseInt(btn.dataset.option, 10);
+    const marker = btn.querySelector('.opt-marker');
+
+    btn.disabled = submitted;
+    btn.classList.toggle('cursor-default', submitted);
+
+    if (!submitted) {
+      const isChosen = optionNumber === chosen;
+      btn.setAttribute('aria-pressed', String(isChosen));
+      btn.classList.toggle('border-teal-600', isChosen);
+      btn.classList.toggle('bg-teal-50', isChosen);
+      marker.classList.toggle('bg-teal-700', isChosen);
+      marker.classList.toggle('text-white', isChosen);
+      marker.classList.toggle('border-teal-700', isChosen);
+      return;
+    }
+
+    // Submitted: show correct/incorrect coloring
+    const isCorrect = optionNumber === q.correct;
+    const isChosenWrong = optionNumber === chosen && chosen !== q.correct;
+
+    btn.classList.remove('border-teal-900/15', 'border-teal-600', 'bg-teal-50');
+    marker.classList.remove('bg-teal-700', 'border-teal-700', 'text-white');
+
+    if (isCorrect) {
+      btn.classList.add('border-moss-500', 'bg-moss-50');
+      marker.classList.add('bg-moss-500', 'border-moss-500', 'text-white');
+    } else if (isChosenWrong) {
+      btn.classList.add('border-brick-500', 'bg-brick-50');
+      marker.classList.add('bg-brick-500', 'border-brick-500', 'text-white');
+    } else {
+      btn.classList.add('border-teal-900/15');
+    }
+  });
+}
+
+els.quizList.addEventListener('click', (e) => {
+  if (submitted) return;
+  const opt = e.target.closest('.opt-btn');
+  if (!opt) return;
+
+  const globalIdx = parseInt(opt.dataset.qidx, 10);
+  const chosen = parseInt(opt.dataset.option, 10);
+  answers[globalIdx] = chosen;
+  applyOptionVisualState(globalIdx);
+  updateProgress();
+});
+
+function updateProgress() {
+  const answeredCount = Object.keys(answers).length;
+  els.progressText.textContent = `${answeredCount} of ${QUESTIONS.length} answered`;
+  els.submitBtn.disabled = answeredCount === 0;
+}
+
+els.prevBtn.addEventListener('click', () => {
+  if (currentPage > 0) {
+    currentPage--;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+});
+
+els.nextBtn.addEventListener('click', () => {
+  if (currentPage < TOTAL_PAGES - 1) {
+    currentPage++;
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+});
+
+els.submitBtn.addEventListener('click', () => {
+  if (submitted) {
+    // acts as "Start Over"
+    submitted = false;
+    answers = {};
+    currentPage = 0;
+    els.scoreBanner.classList.add('hidden');
+    els.submitBtn.textContent = 'Check results';
+    els.submitBtn.classList.remove('bg-teal-700', 'hover:bg-teal-800');
+    els.submitBtn.classList.add('bg-amber-600', 'hover:bg-amber-700');
+    renderPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  submitted = true;
+  let score = 0;
+  QUESTIONS.forEach((q, idx) => {
+    if (answers[idx] === q.correct) score++;
+  });
+
+  renderScoreBanner(score, QUESTIONS.length);
+  renderPage(); // re-render current page with coloring
+  els.submitBtn.textContent = 'Start over';
+  els.submitBtn.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+  els.submitBtn.classList.add('bg-teal-700', 'hover:bg-teal-800');
+  els.submitBtn.disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function renderScoreBanner(score, total) {
+  const pct = Math.round((score / total) * 100);
+  const tone = pct >= 70 ? 'moss' : pct >= 40 ? 'amber' : 'brick';
+  const toneClasses = {
+    moss:  'border-moss-500 bg-moss-50 text-moss-600',
+    amber: 'border-amber-600 bg-amber-100 text-amber-700',
+    brick: 'border-brick-500 bg-brick-50 text-brick-600'
+  };
+  els.scoreBanner.className = `sticky top-0 z-10 -mx-5 px-5 py-4 mb-6 border-l-4 ${toneClasses[tone]} rounded-r-md`;
+  els.scoreBanner.innerHTML = `
+    <p class="font-serif text-xl font-semibold">${score} / ${total} correct (${pct}%)</p>
+    <p class="text-sm mt-1 opacity-80">Correct answers are green, your incorrect picks are red. Browse any page with Previous/Next to review.</p>
+  `;
+  els.scoreBanner.classList.remove('hidden');
+}
+
+renderPage();
+</script>
+</body>
+</html>
