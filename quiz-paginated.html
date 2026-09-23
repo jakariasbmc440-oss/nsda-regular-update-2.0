@@ -37,6 +37,13 @@
   .opt-btn:focus-visible, .nav-btn:focus-visible, .primary-btn:focus-visible {
     outline: 3px solid #C9852A; outline-offset: 2px;
   }
+  .question-toggle { width: 100%; text-align: left; }
+  .question-toggle:hover .question-text { text-decoration: underline; }
+  .translation-panel {
+    border-left: 3px solid #1B5A57;
+    background: #EAF2F1;
+    color: #0F3D3E;
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
   .bn { font-family: 'Noto Sans Bengali', 'Inter', sans-serif; }
 </style>
@@ -91,17 +98,97 @@
    ===================================================================== */
 const PAGE_SIZE = 10;
 
+const QUESTION_TRANSLATIONS = {
+  0: "চুক্তি আলোচনায় সম্ভাব্য সমাধানগুলো কীভাবে দেখা উচিত? উত্তর: সেগুলো আলোচনা করে বাস্তবতা যাচাই করা উচিত।",
+  1: "একটি আইটি পেশাদার কী কী workplace safety guideline মেনে চলতে হবে? উত্তর: কর্মস্থলে নিরাপদতার নীতি ও সুরক্ষা অনুশীলন অনুসরণ করতে হবে।",
+  2: "দস্তাবেজ তৈরি ও সম্পাদনার শুরু করার জন্য কোন সফটওয়্যারটি প্রথমে খুলতে হবে? উত্তর: উপযুক্ত ওয়ার্ড প্রসেসর।",
+  3: "সময়, খরচ ও ডেলিভারির বাস্তবসম্মত পূর্বাভাস কীভাবে উপস্থাপন করা উচিত? উত্তর: আলোচনা ও দর-কষাকষির সময় তা স্পষ্টভাবে তুলে ধরা উচিত।",
+  4: "ক্লায়েন্টকে যা অআবিষ্কারক ও নিরপেক্ষ তথ্য দেওয়া হয় তা কী প্রচার করে? উত্তর: বিশ্বাস ও স্বচ্ছতা।",
+  5: "অ্যাফিলিয়েট মার্কেটিং-এর উদাহরণ কী? উত্তর: রেফারেল লিংকসহ ব্লগ পোস্ট করা।",
+  6: "ডিজিটাল দর-কষাকষিতে rapport গড়ে তুলতে কোন আন্তঃব্যক্তিক দক্ষতা গুরুত্বপূর্ণ? উত্তর: যোগাযোগ দক্ষতা।",
+  7: "ইনস্টাগ্রামে reach ও engagement বাড়াতে বিভিন্ন ভিডিও ফরম্যাটের তুলনা কীভাবে করবেন? উত্তর: Stories, Reels এবং IGTV গুরুত্ব সহকারে বুঝতে হবে।",
+  8: "একটি সামগ্রিক মিডিয়া কৌশল তৈরি করতে কত ধরনের media content বুঝতে হবে? উত্তর: সামাজিক মিডিয়া কনটেন্টের ধরন।",
+  9: "ফেসবুকের_metrics দেখে একজন মার্কেটার কিভাবে কনটেন্ট ও বিজ্ঞাপনের কার্যকারিতা বিচার করবেন? উত্তর: Facebook Insights বিশ্লেষণ করে।",
+  10: "ফেসবুক ও টুইটার মার্কেটিং-এর জন্য কী ধাপ আবশ্যক? উত্তর: বিজ্ঞাপন তৈরি ও ব্যবস্থাপনা করা।",
+  11: "লিংকডইনে কোনো প্রতিষ্ঠানকে প্রতিনিধিত্ব করতে কী ধরনের কাঠামো দরকার? উত্তর: Company Page এবং Group।",
+  12: "ফেসবুক মার্কেটিং-এ Standard Events-এর পাশাপাশি কী ধরনের goal-oriented action ব্যবহার করা হয়? উত্তর: Custom Conversions।",
+  13: "টুইটার অনুশীলনে কী কাজ করা হয়? উত্তর: বিজ্ঞাপন তৈরি ও পরিচালনা করা।",
+  14: "ইনস্টাগ্রামে Bio ও Profile Image স্থাপনের সঙ্গে কী জড়িত? উত্তর: এগুলো তৈরি ও অপ্টিমাইজ করা।",
+  15: "দর-কষাকষিতে কোন আন্তঃব্যক্তিক দক্ষতা বিশেষভাবে emphasized হয়? উত্তর: শোনা ও প্রতিফলিত করা।",
+  16: "স্প্রেডশিট অ্যাপের প্রধান উদ্দেশ্য কী? উত্তর: ডেটা সংক্রান্তকরণ, গণনা ও বিশ্লেষণ।",
+  17: "ক্লায়েন্টদের কাছে নিরপেক্ষ ও উদ্দেশ্যমূলক তথ্য কেন গুরুত্বপূর্ণ? উত্তর: বিশ্বাস ও স্বচ্ছতা গড়ে তোলে।",
+  18: "কর্মস্থলের আচরণবিধি বুঝে নিতে আগে কী বোঝা দরকার? উত্তর: কোড অব কন্ডাক্ট।",
+  19: "ক্লায়েন্টের সঙ্গে ন্যায়সঙ্গত আচরণের মানে কী? উত্তর: নিরপেক্ষ ও উদ্দেশ্যমূলক তথ্য প্রদান।",
+  20: "SEO-তে backlink কী? উত্তর: একটি ওয়েবসাইট থেকে অন্য ওয়েবসাইটে যাওয়া লিংক।",
+  21: "মূল্যবান ডিজিটাল মার্কেটিং কৌশল কী? উত্তর: SEO ব্যবহার করে ওয়েবসাইটের র‍্যাঙ্ক উন্নত করা।",
+  22: "ডিজিটাল মার্কেটিং KPI টুল ব্যবহার করার সময় সবচেয়ে গুরুত্বপূর্ণ নৈতিক বিবেচনা কী? উত্তর: ব্যবহারকারীর গোপনীয়তা ও ডেটা সুরক্ষা আইন মেনে চলা।",
+  23: "সামাজিক মিডিয়া কৌশলে Hashtag-এর ভূমিকা কী? উত্তর: কনটেন্টকে শ্রেণিবদ্ধ করে খুঁজে পাওয়া সহজ করে।",
+  24: "ফেসবুকের metrics বিশ্লেষণ করে কীভাবে কার্যকারিতা বিচার করা হয়? উত্তর: Facebook Insights পড়ে।",
+  25: "যে media content দৃশ্যমান নয় কিন্তু শুনে বোঝা যায়, সেটি কী? উত্তর: Audio।",
+  26: "ইনস্টাগ্রামে শক্তিশালী ভিজ্যুয়াল identity গড়তে কী কী উপাদান গুরুত্বপূর্ণ? উত্তর: Bio ও Profile Image তৈরি ও অপ্টিমাইজ করা।",
+  27: "ফেসবুক থেকে ওয়েবসাইটে আসা ভিজিটরদের ট্র্যাক করতে কোন কোড ব্যবহার হয়? উত্তর: Facebook Pixel।",
+  28: "লিংকডইনে lead ও sales opportunity পরিচালনার জন্য কী টুল ব্যবহৃত হয়? উত্তর: Sales Navigator।",
+  29: "কোন media format non-visual ও sound-based? উত্তর: Audio।",
+  30: "টুইটার মার্কেটিং শুরু করতে প্রথমে কী বুঝতে হবে? উত্তর: Twitter Marketing।",
+  31: "Social Media Content-এর মধ্যে কোন ধরন আছে? উত্তর: Audio।",
+  32: "ফেসবুক মার্কেটিং মডিউল শুরু করতে প্রথমে কী বুঝতে হবে? উত্তর: Facebook for Business।",
+  33: "কনটেন্ট শেয়ার ও discovery-এর সাথে সম্পর্কিত সাধারণ ধারণাটি কী? উত্তর: Hashtag ব্যবহার।",
+  34: "নন-ভের্বাল পরিবেশে বন্ধুত্বপূর্ণ অভ্যর্থনা কীভাবে দেখানো যায়? উত্তর: refreshments/চা-নাস্তা দেওয়া।",
+  35: "স্প্রেডশিটে logical test করার জন্য কোন ফাংশন ব্যবহৃত হয়? উত্তর: IF function।",
+  36: "ডেস্কটপে অ্যাপ্লিকেশন, ফাইল বা ফোল্ডারকে কী বলা হয়? উত্তর: Icons।",
+  37: "নীতিমালা অনুযায়ী কী তথ্য সর্বদা নিরাপদ রাখা উচিত? উত্তর: Confidential information (গোপনীয় তথ্য)।",
+  38: "পণ্যের গুণমান নিয়মিত রাখার জন্য কী প্রক্রিয়া অনুসরণ করা হয়? উত্তর: Quality processes।",
+  39: "ক্লায়েন্টকে কী ধরনের তথ্য দেওয়া উচিত? উত্তর: নিরপেক্ষ ও উদ্দেশ্যমূলক তথ্য।",
+  40: "SEO ও SEM-এ competitive analysis ও keyword research-এর জন্য কোন টুল ব্যবহৃত হয়? উত্তর: SEMrush।",
+  41: "ডিজিটাল মার্কেটিং নির্দেশিকা অনুযায়ী কনটেন্টের সাফল্যের মূল কারণ কী? উত্তর: কনটেন্টটি লক্ষ্য audience-এর জন্য প্রাসঙ্গিক হওয়া।",
+  42: "ক্যাম্পেইন সফলতা বিচার ও পুরনো ভিজিটরদের re-engage করতে টুইটারের কী টুল দরকার? উত্তর: Twitter Conversion Tracking & Remarketing।",
+  43: "সামাজিক মিডিয়া কৌশল তৈরি করতে কী ধরনের media format বুঝতে হবে? উত্তর: Types of Social Media Content।",
+  44: "সামাজিক প্ল্যাটফর্মের পরিকল্পনা, বাস্তবায়ন ও পর্যবেক্ষণের সামগ্রিক প্রক্রিয়াটি কী? উত্তর: Social media management।",
+  45: "লিংকডইনে paid promotion চালাতে কী করতে হয়? উত্তর: বিজ্ঞাপন তৈরি ও পরিচালনা করতে হয়।",
+  46: "সামাজিক মিডিয়া মার্কেটিং-এর গুরুত্ব নিয়ে প্রথমে কী বোঝা জরুরি? উত্তর: Importance of Social Media Marketing।",
+  47: "ফেসবুকে পেশাদার মার্কেটিং শুরু করতে কী জানতে হবে? উত্তর: Facebook for Business।",
+  48: "ইনস্টাগ্রামে বিজ্ঞাপনের সৃষ্টি ও বিশ্লেষণের সঙ্গে কী সম্পর্কিত? উত্তর: Advertisement creation and analysis।",
+  49: "ইনস্টাগ্রাম ফলোয়ারকে ব্যবসায়িক lead-এ রূপান্তর করতে কী করা হয়? উত্তর: Conversion strategies।",
+  50: "ফেসবুকের কর্মক্ষমতা বুঝতে কী ডেটা পড়া হয়? উত্তর: Facebook Insights।",
+  51: "দর-কষাকষির সময় কোন ভাষা ব্যবহার করা উচিত? উত্তর: উপযুক্ত ও সঠিক ভাষা।",
+  52: "ডেস্কটপের peripherals কম্পিউটারের সাথে কীভাবে সংযুক্ত করা উচিত? উত্তর: ঠিকভাবে চেক করে সংযুক্ত করতে হয়।",
+  53: "কর্মস্থলে পেশাদারিত্ব কীভাবে প্রদর্শন করা যায়? উত্তর: দক্ষতা, জ্ঞান ও যোগ্যতা যথাযথভাবে উপস্থাপন করে।",
+  54: "ডিজিটাল মার্কেটিং-এ কনটেন্টের সাফল্যের মূল কারণ কী? উত্তর: লক্ষ্য audience-এর প্রাসঙ্গিক কনটেন্ট।",
+  55: "ডিজিটাল মার্কেটিং-এ কোন পদের নাম পরিচিত? উত্তর: SEO Specialist।",
+  56: "অ্যাফিলিয়েট মার্কেটিং কী? উত্তর: অন্যের পণ্য প্রচার করে কমিশন আয় করা।",
+  57: "ফেসবুকে paid promotion-এর জন্য কী করতে হয়? উত্তর: বিজ্ঞাপন তৈরি ও পরিচালনা করা।",
+  58: "ব্যক্তিগত ব্র্যান্ড identity গড়ে তুলতে প্রথমে কী করা হয়? উত্তর: Profile তৈরি ও অপ্টিমাইজ করা।",
+  59: "Pinterest-এ user action ট্র্যাক করতে কী ব্যবহৃত হয়? উত্তর: Pinterest Tag and Events।",
+  60: "ইনস্টাগ্রাম ফলোয়ারকে sales ও leads-এ রূপান্তর করার উপায় কী? উত্তর: Instagram followers to sales & leads conversion।",
+  61: "কোন media format non-visual ও sound-based? উত্তর: Audio।",
+  62: "Rich Pins কী? উত্তর: ওয়েবসাইটের ডাইনামিক metadata নিয়ে আসা advanced pin type।",
+  63: "মাইক্রোব্লগিং প্ল্যাটফর্মের জন্য কী মার্কেটিং কৌশল? উত্তর: Twitter Marketing।",
+  64: "টুইটারে reach ও visibility বাড়াতে কী নির্দেশনা দেওয়া হয়? উত্তর: follower growth-এর উপায়।",
+  65: "ইনস্টাগ্রাম মার্কেটিং-এ Captions-এর ভূমিকা কী? উত্তর: captions-এর ভূমিকা বুঝতে হবে।",
+  66: "ধারাবাহিকভাবে ভালো দর-কষাকষির জন্য কী অপরিহার্য? উত্তর: warm and welcoming room।",
+  67: "কম্পিউটারে সেটআপ শুরু করতে installation package/ executable-এ কী করতে হয়? উত্তর: installation শুরু করতে হয়।",
+  68: "প্রেজেন্টেশনের slides-এ কী ধরনের উপাদান যোগ করা হয়? উত্তর: ছবি, চিত্র, লেখা, টেবিল, প্রতীক ও মিডিয়া।",
+  69: "নিজের ও অন্যের কাজের গুণমান কী মানদণ্ডে নিশ্চিত করতে হবে? উত্তর: workplace standard।",
+  70: "নীতিমালা অনুযায়ী কী তথ্য সার্বক্ষণিক নিরাপদ রাখতে হবে? উত্তর: Confidential information।",
+  71: "সামাজিক মিডিয়া মার্কেটিং প্ল্যাটফর্মের উদাহরণ কী? উত্তর: Instagram।",
+  72: "কোন advanced pin type source website থেকে metadata টেনে আনে? উত্তর: Rich Pins।",
+  73: "লিংকডইনে lead ও sales opportunity পরিচালনা করতে কী টুল ব্যবহৃত হয়? উত্তর: Sales Navigator।",
+  74: "ফেসবুকে content ও campaign-এর কার্যকারিতা কী দিয়ে মাপা হয়? উত্তর: Facebook Insights।",
+  75: "লিংকডইনে promotion-এর সাথে কী সম্পর্কিত? উত্তর: Ad তৈরি ও পরিচালনা করা।",
+  76: "টুইটারে পোস্ট সম্পর্কিত কী নির্দেশনা মানতে হয়? উত্তর: What to Tweet।"
+};
+
 const QUESTIONS = [
-  { q: "How should possible solutions be handled during negotiations?", options: ["They should be avoided","They should be deferred to another meeting","They should be imposed by the leader","They should be discussed and viability assessed"], correct: 4 },
-  { q: "What must an IT professional observe in the workplace, according to established guidelines, to ensure a hazard-free environment?", options: ["Software licensing agreements","Data backup schedules","Network security protocols","Safe workplace practices"], correct: 4 },
-  { q: "Which specific software must a user first select and launch to begin the process of document creation and editing?", options: ["A spreadsheet application","A presentation software","An appropriate word processor","A database management system"], correct: 3 },
-  { q: "How should realistic estimates for time, cost, and delivery be presented?", options: ["During negotiation with clients","Informally via conversation","During workplace meetings only","After project completion"], correct: 1 },
-  { q: "What does unbiased and objective information provided to clients promote?", options: ["Personal gain","Trust and transparency","Confidential issues","Faster negotiation"], correct: 2 },
-  { q: "Which is an example of affiliate marketing?", options: ["Sending internal memos","Printing flyers","Blogging with referral links","Creating company uniforms"], correct: 3 },
-  { q: "Which of the following is a key interpersonal skill for developing rapport in digital negotiation?", options: ["Ignoring the other party","Communication skills","Working in silence","Avoiding eye contact"], correct: 2 },
-  { q: "Compare the different video and visual content formats explained for maximizing reach and engagement on Instagram, including short-form, temporary, and long-form video content.", options: ["Universal Tags, Conversion Tracking and Remarketing","Rich Pins, Product Pins and Events","Stories, Reels and IGTV","Page, Group and Insights"], correct: 3 },
-  { q: "What type of content must a marketer correctly interpret when developing a cohesive media strategy, considering various media formats available?", options: ["Types of Social Media Content","Traditional Print Content","Long-form Academic Essay","Private Email Communications"], correct: 1 },
-  { q: "How can a marketer assess the performance of their content and ads on the platform, by analyzing metrics provided directly by Facebook?", options: ["Facebook insights are interpreted.","Twitter Analytics are reviewed.","External CRM data is cross-referenced.","Sales Navigator reports are generated."], correct: 1 },
+  { q: "How should possible solutions be handled during negotiations?", options: ["They should be avoided","They should be deferred to another meeting","They should be imposed by the leader","They should be discussed and viability assessed"], correct: 4, bn: QUESTION_TRANSLATIONS[0] },
+  { q: "What must an IT professional observe in the workplace, according to established guidelines, to ensure a hazard-free environment?", options: ["Software licensing agreements","Data backup schedules","Network security protocols","Safe workplace practices"], correct: 4, bn: QUESTION_TRANSLATIONS[1] },
+  { q: "Which specific software must a user first select and launch to begin the process of document creation and editing?", options: ["A spreadsheet application","A presentation software","An appropriate word processor","A database management system"], correct: 3, bn: QUESTION_TRANSLATIONS[2] },
+  { q: "How should realistic estimates for time, cost, and delivery be presented?", options: ["During negotiation with clients","Informally via conversation","During workplace meetings only","After project completion"], correct: 1, bn: QUESTION_TRANSLATIONS[3] },
+  { q: "What does unbiased and objective information provided to clients promote?", options: ["Personal gain","Trust and transparency","Confidential issues","Faster negotiation"], correct: 2, bn: QUESTION_TRANSLATIONS[4] },
+  { q: "Which is an example of affiliate marketing?", options: ["Sending internal memos","Printing flyers","Blogging with referral links","Creating company uniforms"], correct: 3, bn: QUESTION_TRANSLATIONS[5] },
+  { q: "Which of the following is a key interpersonal skill for developing rapport in digital negotiation?", options: ["Ignoring the other party","Communication skills","Working in silence","Avoiding eye contact"], correct: 2, bn: QUESTION_TRANSLATIONS[6] },
+  { q: "Compare the different video and visual content formats explained for maximizing reach and engagement on Instagram, including short-form, temporary, and long-form video content.", options: ["Universal Tags, Conversion Tracking and Remarketing","Rich Pins, Product Pins and Events","Stories, Reels and IGTV","Page, Group and Insights"], correct: 3, bn: QUESTION_TRANSLATIONS[7] },
+  { q: "What type of content must a marketer correctly interpret when developing a cohesive media strategy, considering various media formats available?", options: ["Types of Social Media Content","Traditional Print Content","Long-form Academic Essay","Private Email Communications"], correct: 1, bn: QUESTION_TRANSLATIONS[8] },
+  { q: "How can a marketer assess the performance of their content and ads on the platform, by analyzing metrics provided directly by Facebook?", options: ["Facebook insights are interpreted.","Twitter Analytics are reviewed.","External CRM data is cross-referenced.","Sales Navigator reports are generated."], correct: 1, bn: QUESTION_TRANSLATIONS[9] },
   { q: "Which action is a required step for both Facebook and Twitter Marketing?", options: ["Page and group are created and optimized","Profile is created and optimized","Ad is created and managed","Standard Events, and Custom Conversions are applied"], correct: 3 },
   { q: "What two structures represent an organization and foster a professional community on LinkedIn?", options: ["Company Page and Group","Page and group","Stories, Reels and IGTV","Pinterest Product Pins and Rich Pins"], correct: 1 },
   { q: "What specific goal-oriented actions are applied in addition to Standard Events in Facebook Marketing?", options: ["LSI Technique","External Links","Custom Conversions","Header Tag"], correct: 3 },
@@ -196,6 +283,11 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function getQuestionTranslation(globalIdx, q) {
+  const raw = q.bn || QUESTION_TRANSLATIONS[globalIdx] || '';
+  return raw.replace(/\s*উত্তর\s*:\s*.*$/i, '').trim();
+}
+
 function pageRange(pageIndex) {
   const start = pageIndex * PAGE_SIZE;
   const end = Math.min(start + PAGE_SIZE, QUESTIONS.length);
@@ -214,11 +306,18 @@ function questionTemplate(q, globalIdx) {
       </button>`;
   }).join('');
 
+  const bengaliText = getQuestionTranslation(globalIdx, q) || 'এই প্রশ্নের বাংলা অনুবাদ এখনও যোগ করা হয়নি।';
+
   return `
     <article class="bg-white border border-teal-900/10 rounded-lg p-5" data-question-card="${globalIdx}">
-      <div class="flex items-start gap-3">
-        <span class="font-serif text-teal-700 font-semibold text-lg flex-none">${globalIdx + 1}.</span>
-        <p class="flex-1 font-medium leading-relaxed">${escapeHtml(q.q)}</p>
+      <button type="button" class="question-toggle" data-question-trigger="${globalIdx}" aria-expanded="false">
+        <div class="flex items-start gap-3">
+          <span class="font-serif text-teal-700 font-semibold text-lg flex-none">${globalIdx + 1}.</span>
+          <p class="question-text flex-1 font-medium leading-relaxed text-left">${escapeHtml(q.q)}</p>
+        </div>
+      </button>
+      <div class="translation-panel hidden mt-3 ml-8 rounded-md px-4 py-3 text-sm leading-relaxed bn" data-translation="${globalIdx}">
+        ${escapeHtml(bengaliText)}
       </div>
       <div class="mt-4 space-y-2 pl-8" data-options="${globalIdx}">
         ${optionsHtml}
@@ -289,6 +388,17 @@ function applyOptionVisualState(globalIdx, thisPageSubmitted) {
 }
 
 els.quizList.addEventListener('click', (e) => {
+  const trigger = e.target.closest('[data-question-trigger]');
+  if (trigger) {
+    const globalIdx = parseInt(trigger.dataset.questionTrigger, 10);
+    const panel = document.querySelector(`[data-translation="${globalIdx}"]`);
+    if (!panel) return;
+    const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+    trigger.setAttribute('aria-expanded', String(!isOpen));
+    panel.classList.toggle('hidden', isOpen);
+    return;
+  }
+
   if (pageState[currentPage].submitted) return;
   const opt = e.target.closest('.opt-btn');
   if (!opt) return;
